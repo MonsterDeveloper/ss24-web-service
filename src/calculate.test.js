@@ -1,4 +1,4 @@
-import {factorial} from './calculate';
+import {factorial, product} from './calculate';
 import {test, describe, expect} from "@jest/globals"; // this is optional, all three are global variables im runner scope
 
 describe('factorial', () => {
@@ -19,9 +19,28 @@ describe('factorial', () => {
 
 })
 
-describe('product', ()=>{
+describe('product', () => {
+    test('product of 1 to 5 using default term should be 120', () => {
+        const term = jest.fn(k => k);
+        expect(product(5, term)).toBe(120);
 
+        expect(term).toHaveBeenCalledTimes(5);
+        expect(term).toHaveBeenNthCalledWith(1, 1);
+        expect(term).toHaveBeenNthCalledWith(2, 2);
+        expect(term).toHaveBeenNthCalledWith(3, 3);
+        expect(term).toHaveBeenNthCalledWith(4, 4);
+        expect(term).toHaveBeenNthCalledWith(5, 5);
+    });
 
+    test('product of 1 to 5 using custom term function should be 3840', () => {
+        const term = jest.fn(k => k * 2);
 
+        expect(product(5, term)).toBe(3840);
+        expect(term).toHaveBeenCalledTimes(5);
+        expect(term).toHaveBeenNthCalledWith(1, 1);
+        expect(term).toHaveBeenNthCalledWith(2, 2);
+        expect(term).toHaveBeenNthCalledWith(3, 3);
+        expect(term).toHaveBeenNthCalledWith(4, 4);
+        expect(term).toHaveBeenNthCalledWith(5, 5);
+    });
 });
-
