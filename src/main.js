@@ -3,23 +3,16 @@ const fs = require("fs");
 
 const app = express();
 
-app.use(express.urlencoded());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.sendFile(`${__dirname}/public/index.html`);
 });
 
-app.post("/create-avatar", (req, res) => {
-  console.log(req.body);
-  res.send("Avatar created successfully");
+app.post("/api/avatars", (req, res) => {
+  const avatars = getAvatars();
 
-  if (!fs.existsSync(`${__dirname}/avatars.json`)) {
-    fs.writeFileSync(`${__dirname}/avatars.json`, "[]");
-  }
-
-  const avatars = JSON.parse(fs.readFileSync(`${__dirname}/avatars.json`));
-
-  avatars.push({
+  const avatar = {
     id: new Date().getTime(),
     characterName: req.body.name,
     childAge: Number(req.body.age),
@@ -29,56 +22,79 @@ app.post("/create-avatar", (req, res) => {
     upperClothing: req.body.upperClothing,
     lowerClothing: req.body.lowerClothing,
     createdAt: new Date().toISOString(),
-  });
+  };
 
-  fs.writeFileSync(`${__dirname}/avatars.json`, JSON.stringify(avatars, null, 2));
+  avatars.push(avatar);
+
+  saveAvatars(avatars);
+
+  res.setHeader("Location", `/api/avatars/${avatar.id}`)
+  res.status(201).json(avatar);
 });
 
-app.get("/avatars", (req, res) => {
-  const avatars = JSON.parse(fs.readFileSync(`${__dirname}/avatars.json`));
+app.get("/api/avatars", (req, res) => {
+  const avatars = getAvatars();
 
-  res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Avatars</title>
-    </head>
-    <body>
-      <h1>Avatars</h1>
-      <ol>
-        ${avatars.map((avatar) => `<li><a href="/avatar/${avatar.id}">${avatar.characterName}</a></li>`).join("")}
-      </ol>
-    </body>
-  </html>
-  `)
+  res.json(avatars);
 });
 
-app.get(`/avatar/:id`, (req, res) => {
-  const avatars = JSON.parse(fs.readFileSync(`${__dirname}/avatars.json`));
+app.get(`/api/avatars/:id`, (req, res) => {
+  const avatars = getAvatars();
   const avatar = avatars.find((avatar) => avatar.id === Number(req.params.id));
 
-  res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${avatar.characterName}</title>
-    </head>
-    <body>
-      <h1>${avatar.characterName}</h1>
-      <p>Age: ${avatar.childAge}</p>
-      <p>Skin color: ${avatar.skinColor}</p>
-      <p>Hairstyle: ${avatar.hairstyle}</p>
-      <p>Head shape: ${avatar.headShape}</p>
-      <p>Upper clothing: ${avatar.upperClothing}</p>
-      <p>Lower clothing: ${avatar.lowerClothing}</p>
-      <p>Created at: ${avatar.createdAt}</p>
-    </body>
-  </html>
-  `)
+  if (!avatar) {
+    return res.status(404).json({ error: "Avatar not found" });
+  }
+
+  res.json(avatar);
 });
+
+app.put(`/api/avatars/:id`, (req, res) => {
+  const avatars = getAvatars();
+  const avatar = avatars.find((avatar) => avatar.id === Number(req.params.id));
+
+  if (!avatar) {
+    return res.status(404).json({ error: "Avatar not found" });
+  }
+
+  avatar.characterName = req.body.name;
+  avatar.childAge = Number(req.body.age);
+  avatar.skinColor = req.body.color;
+  avatar.hairstyle = req.body.hairstyle;
+  avatar.headShape = req.body.headShape;
+  avatar.upperClothing = req.body.upperClothing;
+  avatar.lowerClothing = req.body.lowerClothing;
+
+  saveAvatars(avatars);
+
+  res.sendStatus(204);
+});
+
+app.delete(`/api/avatars/:id`, (req, res) => {
+  const avatars = getAvatars();
+  const avatarIndex = avatars.findIndex((avatar) => avatar.id === Number(req.params.id));
+
+  if (avatarIndex === -1) {
+    return res.status(404).json({ error: "Avatar not found" });
+  }
+
+  avatars.splice(avatarIndex, 1);
+
+  saveAvatars(avatars);
+
+  res.sendStatus(204);
+});
+
+function getAvatars() {
+  if (!fs.existsSync(`${__dirname}/avatars.json`)) {
+    fs.writeFileSync(`${__dirname}/avatars.json`, "[]");
+  }
+
+  return JSON.parse(fs.readFileSync(`${__dirname}/avatars.json`));
+}
+
+function saveAvatars(avatars) {
+  fs.writeFileSync(`${__dirname}/avatars.json`, JSON.stringify(avatars, null, 2));
+}
 
 app.listen(3000);
