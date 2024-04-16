@@ -12,6 +12,8 @@ function factorial(n){
 function product(n, term = k => k, initial=1){
     // todo: implement the product `term(initial) * term(initial + 1) * term(initial + 2) * ... * term(initial + d)` with initial + d <= n
 
+    if (typeof n !== 'number' || n < 0) throw new Error('n should be a positive number');
+
     let result = term(initial);
     for (let i = initial + 1; i <= n; i++) {
         result *= term(i);

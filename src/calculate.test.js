@@ -43,4 +43,16 @@ describe('product', () => {
         expect(term).toHaveBeenNthCalledWith(4, 4);
         expect(term).toHaveBeenNthCalledWith(5, 5);
     });
+
+    test('a function should throw if the number is negative', () => {
+        expect(() => {
+            product(-5);
+        }).toThrow();
+    });
+
+    test('a function should throw if n is not a number', () => {
+        expect(() => {
+            product('5');
+        }).toThrow();
+    })
 });
