@@ -1,5 +1,5 @@
-const express = require("express");
-const fs = require("fs");
+import express from "express";
+import fs from "fs";
 
 const app = express();
 
@@ -14,9 +14,9 @@ app.post("/api/avatars", (req, res) => {
 
   const avatar = {
     id: new Date().getTime(),
-    characterName: req.body.name,
-    childAge: Number(req.body.age),
-    skinColor: req.body.color,
+    avatarName: req.body.avatarName,
+    childAge: Number(req.body.childAge),
+    skinColor: req.body.skinColor,
     hairstyle: req.body.hairstyle,
     headShape: req.body.headShape,
     upperClothing: req.body.upperClothing,
@@ -97,4 +97,8 @@ function saveAvatars(avatars) {
   fs.writeFileSync(`${__dirname}/avatars.json`, JSON.stringify(avatars, null, 2));
 }
 
-app.listen(3000);
+if (process.argv[1].includes("main.js")) {
+  app.listen(3000);
+}
+
+export default app;

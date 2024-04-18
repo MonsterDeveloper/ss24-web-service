@@ -1,5 +1,5 @@
-import {jest, test, expect, beforeEach, describe} from "@jest/globals"; // this is optional, all three are global variables im runner scope
-import app from './app.js';
+import { test, expect, describe} from "@jest/globals"; // this is optional, all three are global variables im runner scope
+import app from './main.js';
 import request from 'supertest';
 
 describe('avatar api', () => {
@@ -30,7 +30,9 @@ describe('avatar api', () => {
             .set('Accept', 'application/json')
             .expect(200);
 
-        // expect on response2
+        expect(getOneResponse.body).toMatchObject(TEST_DATA);
+        expect(getOneResponse.body.id).toBe(createResponse.body.id);
+        expect(getOneResponse.body.createdAt).toBe(createResponse.body.createdAt);
     });
 
 
