@@ -1,27 +1,28 @@
 import express from "express";
 import fs from "fs";
+import path from "path";
+import avatarSchema from "./avatar.schema.js";
+
+const avatarsFilePath = path.join(process.cwd(), 'avatars.json');
 
 const app = express();
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.sendFile(`${__dirname}/public/index.html`);
-});
-
 app.post("/api/avatars", (req, res) => {
+
+  const { error, value } = avatarSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
   const avatars = getAvatars();
 
   const avatar = {
     id: new Date().getTime(),
-    avatarName: req.body.avatarName,
-    childAge: Number(req.body.childAge),
-    skinColor: req.body.skinColor,
-    hairstyle: req.body.hairstyle,
-    headShape: req.body.headShape,
-    upperClothing: req.body.upperClothing,
-    lowerClothing: req.body.lowerClothing,
     createdAt: new Date().toISOString(),
+    ...value,
   };
 
   avatars.push(avatar);
@@ -86,15 +87,15 @@ app.delete(`/api/avatars/:id`, (req, res) => {
 });
 
 function getAvatars() {
-  if (!fs.existsSync(`${__dirname}/avatars.json`)) {
-    fs.writeFileSync(`${__dirname}/avatars.json`, "[]");
+  if (!fs.existsSync(avatarsFilePath)) {
+    fs.writeFileSync(avatarsFilePath, "[]");
   }
 
-  return JSON.parse(fs.readFileSync(`${__dirname}/avatars.json`));
+  return JSON.parse(fs.readFileSync(avatarsFilePath));
 }
 
 function saveAvatars(avatars) {
-  fs.writeFileSync(`${__dirname}/avatars.json`, JSON.stringify(avatars, null, 2));
+  fs.writeFileSync(avatarsFilePath, JSON.stringify(avatars, null, 2));
 }
 
 if (process.argv[1].includes("main.js")) {

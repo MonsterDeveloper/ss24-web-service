@@ -36,5 +36,31 @@ describe('avatar api', () => {
     });
 
 
+    test('create avatar requires at least avatar name and child age', async () => {
+
+        const testData = {
+            "skinColor": "#0000ff",
+            "hairstyle": "short",
+            "headShape": "oval",
+            "upperClothing": "jacket",
+            "lowerClothing": "shorts"
+        }
+
+        const createResponse = await request(app)
+            .post('/api/avatars')
+            .send(testData)
+            .set('Accept', 'application/json')
+            .expect(400);
+
+        expect(createResponse.body.error).toBe('"avatarName" is required');
+
+        const createResponse2 = await request(app)
+            .post('/api/avatars')
+            .send({ "avatarName": "Mark" })
+            .set('Accept', 'application/json')
+            .expect(400);
+
+        expect(createResponse2.body.error).toBe('"childAge" is required');
+    });
 });
 
