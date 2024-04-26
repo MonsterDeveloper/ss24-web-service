@@ -2,15 +2,43 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import avatarSchema from "./avatar.schema.js";
+import { v4 as uuidv4 } from "uuid";
+import passport from "passport";
+import { isParent, isChild } from "./roles.js";
+import { BasicStrategy } from "passport-http";
+import bcrypt from "bcrypt";
 
-const avatarsFilePath = path.join(process.cwd(), 'avatars.json');
+const avatarsFilePath = path.join(process.cwd(), "avatars.json");
+const usersFilePath = path.join(process.cwd(), "users.json");
 
 const app = express();
 
+passport.use(
+  new BasicStrategy(async function (userid, password, done) {
+    try {
+      const users = JSON.parse(fs.readFileSync(usersFilePath, "utf8"));
+      const user = users.find((user) => user.userName === userid);
+      if (user) {
+        const isCorrect = await bcrypt.compare(password, user.password);
+        if (isCorrect) {
+          done(null, user);
+        } else {
+          done(null, false);
+        }
+      } else {
+        done(null, false);
+      }
+    } catch (err) {
+      done(err);
+    }
+  })
+);
+
 app.use(express.json());
 
-app.post("/api/avatars", (req, res) => {
+app.use(passport.authenticate("basic", { session: false }));
 
+app.post("/api/avatars", isParent, (req, res) => {
   const { error, value } = avatarSchema.validate(req.body);
 
   if (error) {
@@ -20,7 +48,7 @@ app.post("/api/avatars", (req, res) => {
   const avatars = getAvatars();
 
   const avatar = {
-    id: new Date().getTime(),
+    id: uuidv4(),
     createdAt: new Date().toISOString(),
     ...value,
   };
@@ -29,19 +57,19 @@ app.post("/api/avatars", (req, res) => {
 
   saveAvatars(avatars);
 
-  res.setHeader("Location", `/api/avatars/${avatar.id}`)
+  res.setHeader("Location", `/api/avatars/${avatar.id}`);
   res.status(201).json(avatar);
 });
 
-app.get("/api/avatars", (req, res) => {
+app.get("/api/avatars", isChild, (req, res) => {
   const avatars = getAvatars();
 
   res.json(avatars);
 });
 
-app.get(`/api/avatars/:id`, (req, res) => {
+app.get(`/api/avatars/:id`, isChild, (req, res) => {
   const avatars = getAvatars();
-  const avatar = avatars.find((avatar) => avatar.id === Number(req.params.id));
+  const avatar = avatars.find((avatar) => avatar.id === req.params.id);
 
   if (!avatar) {
     return res.status(404).json({ error: "Avatar not found" });
@@ -50,7 +78,7 @@ app.get(`/api/avatars/:id`, (req, res) => {
   res.json(avatar);
 });
 
-app.put(`/api/avatars/:id`, (req, res) => {
+app.put(`/api/avatars/:id`, isParent, (req, res) => {
   const avatars = getAvatars();
   const avatar = avatars.find((avatar) => avatar.id === Number(req.params.id));
 
@@ -58,22 +86,32 @@ app.put(`/api/avatars/:id`, (req, res) => {
     return res.status(404).json({ error: "Avatar not found" });
   }
 
-  avatar.characterName = req.body.name;
-  avatar.childAge = Number(req.body.age);
-  avatar.skinColor = req.body.color;
-  avatar.hairstyle = req.body.hairstyle;
-  avatar.headShape = req.body.headShape;
-  avatar.upperClothing = req.body.upperClothing;
-  avatar.lowerClothing = req.body.lowerClothing;
+  const { error, value } = avatarSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  avatar.characterName = value.characterName;
+  avatar.childAge = value.childAge;
+  avatar.skinColor = value.skinColor;
+  avatar.hairstyle = value.hairstyle;
+  avatar.headShape = value.headShape;
+  avatar.upperClothing = value.upperClothing;
+  avatar.lowerClothing = value.lowerClothing;
 
   saveAvatars(avatars);
 
   res.sendStatus(204);
 });
 
-app.delete(`/api/avatars/:id`, (req, res) => {
+app.delete(`/api/avatars/:id`, isParent, (req, res) => {
   const avatars = getAvatars();
-  const avatarIndex = avatars.findIndex((avatar) => avatar.id === Number(req.params.id));
+  const avatarIndex = avatars.findIndex(
+    (avatar) => avatar.id === Number(req.params.id)
+  );
 
   if (avatarIndex === -1) {
     return res.status(404).json({ error: "Avatar not found" });

@@ -10,8 +10,14 @@ export default Joi.object({
         .max(20)
         .required(),
 
-    childAge: Joi.number().integer().min(0).max(100).required(),
-    skinColor: Joi.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
+    childAge: Joi
+        .number()
+        .integer().min(0).max(100)
+        .required(),
+
+    skinColor: Joi.string()
+        .regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
+        .required(),
 
     hairstyle: Joi
         .string()

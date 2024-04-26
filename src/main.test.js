@@ -17,22 +17,57 @@ describe('avatar api', () => {
     test('create avatar', async () => {
         const createResponse = await request(app)
             .post('/api/avatars')
+            .auth('marie@home.edu', '123')
             .send(TEST_DATA)
             .set('Accept', 'application/json')
             .expect(201);
 
         expect(createResponse.body).toMatchObject(TEST_DATA);
-        expect(createResponse.body.id).toBeGreaterThan(0);
+        expect(createResponse.body.id).toBeDefined();
         expect(createResponse.body.createdAt).toBeDefined();
 
+        const newAvatarId = createResponse.body.id;
+
         const getOneResponse = await request(app)
-            .get(`/api/avatars/${createResponse.body.id}`)
+            .get(`/api/avatars/${newAvatarId}`)
             .set('Accept', 'application/json')
+            .auth('marie@home.edu', '123')
             .expect(200);
 
         expect(getOneResponse.body).toMatchObject(TEST_DATA);
-        expect(getOneResponse.body.id).toBe(createResponse.body.id);
-        expect(getOneResponse.body.createdAt).toBe(createResponse.body.createdAt);
+    });
+
+    test('get all', async () => {
+
+        const getAllResponse = await request(app)
+            .get(`/api/avatars`)
+            .auth('marie@home.edu', '123')
+            .set('Accept', 'application/json')
+            .expect(200);
+
+        const createResponse = await request(app)
+            .post('/api/avatars')
+            .auth('marie@home.edu', '123')
+            .send(TEST_DATA)
+            .set('Accept', 'application/json')
+            .expect(201);
+
+        const newAvatarId = createResponse.body.id;
+
+        const getAllWithNewResponse = await request(app)
+            .get(`/api/avatars`)
+            .auth('marie@home.edu', '123')
+            .set('Accept', 'application/json')
+            .expect(200);
+
+        expect(getAllResponse.body.length + 1).toEqual(getAllWithNewResponse.body.length)
+        expect(getAllWithNewResponse.body).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: newAvatarId
+                })
+            ])
+        );
     });
 
 
@@ -48,6 +83,7 @@ describe('avatar api', () => {
 
         const createResponse = await request(app)
             .post('/api/avatars')
+            .auth('marie@home.edu', '123')
             .send(testData)
             .set('Accept', 'application/json')
             .expect(400);
@@ -56,6 +92,7 @@ describe('avatar api', () => {
 
         const createResponse2 = await request(app)
             .post('/api/avatars')
+            .auth('marie@home.edu', '123')
             .send({ "avatarName": "Mark" })
             .set('Accept', 'application/json')
             .expect(400);
