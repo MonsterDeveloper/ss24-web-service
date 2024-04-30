@@ -99,5 +99,25 @@ describe('avatar api', () => {
 
         expect(createResponse2.body.error).toBe('"childAge" is required');
     });
+
+    test("create user", async () => {
+        const createUserResponse = await request(app)
+            .post('/api/users')
+            .send({
+                "userName": "test",
+                "password": "123",
+                "roles": ["parent"]
+            })
+            .auth('marie@home.edu', '123')
+            .set('Accept', 'application/json')
+            .expect(201);
+
+        expect(createUserResponse.body).toMatchObject({
+            "userName": "test",
+            "roles": ["parent"]
+        });
+        expect(createUserResponse.body.id).toBeDefined();
+
+    });
 });
 

@@ -7,6 +7,7 @@ import passport from "passport";
 import { isParent, isChild } from "./roles.js";
 import { BasicStrategy } from "passport-http";
 import bcrypt from "bcrypt";
+import Joi from "joi";
 
 const avatarsFilePath = path.join(process.cwd(), "avatars.json");
 const usersFilePath = path.join(process.cwd(), "users.json");
@@ -122,6 +123,34 @@ app.delete(`/api/avatars/:id`, isParent, (req, res) => {
   saveAvatars(avatars);
 
   res.sendStatus(204);
+});
+
+const createUserSchema = Joi.object({
+  userName: Joi.string().required(),
+  password: Joi.string().required(),
+  roles: Joi.array().items(Joi.string().valid("parent", "child")).required(),
+});
+
+app.post("/api/users", isParent, (req, res) => {
+  const { error, value } = createUserSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const users = JSON.parse(fs.readFileSync(usersFilePath, "utf8"));
+
+  const user = {
+    id: uuidv4(),
+    ...value,
+  };
+
+  users.push(user);
+
+  fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+
+  res.setHeader("Location", `/api/users/${user.id}`);
+  res.status(201).json(user);
 });
 
 function getAvatars() {
