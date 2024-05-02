@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Creation Tools</title>
+  </head>
+  <body>
+    <h1>Avatar Creation Tools</h1>
+    <form method="post" style="display: flex; flex-direction: column; row-gap: 12px; align-items: flex-start; justify-content: flex-start;" onsubmit="return handleSubmit(event)">
+      <input type="text" name="avatarName" required placeholder="Name" />
+      <input type="number" name="childAge" required placeholder="Age" />
+      <input type="color" name="skinColor" required placeholder="Skin color" />
+      <select name="hairstyle" required>
+        <option value="short">Short</option>
+        <option value="bald">Bald</option>
+        <option value="short-curly">Short curly</option>
+        <option value="short-straight">Short straight</option>
+        <option value="medium-curly">Medium curly</option>
+        <option value="medium-straight">Medium straight</option>
+        <option value="long-curly">Long curly</option>
+        <option value="long-straight">Long straight</option>
+        <option value="dread-locks">Dread locks</option>
+      </select>
+      <select name="headShape" required>
+        <option value="oval">Oval</option>
+        <option value="round">Round</option>
+        <option value="heart">Heart</option>
+        <option value="rectangular">Reactangular</option>
+      </select>
+      <select name="upperClothing" required>
+        <option value="jacket">Jacket</option>
+        <option value="shirt">Shirt</option>
+        <option value="hoodie">Hoodie</option>
+        <option value="dress">dress</option>
+      </select>
+      <select name="lowerClothing" required>
+        <option value="shorts">Shorts</option>
+        <option value="pants">Pants</option>
+        <option value="skirt">Skirt</option>
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      function handleSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        fetch('/api/avatars', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${btoa('marie@home.edu:123')}`,
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Success:', data);
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+      }
+    </script>
+  </body>
+</html>

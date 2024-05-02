@@ -37,7 +37,11 @@ passport.use(
 
 app.use(express.json());
 
-app.use(passport.authenticate("basic", { session: false }));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/index.html"));
+})
+
+app.use("/api/*", passport.authenticate("basic", { session: false }));
 
 app.post("/api/avatars", isParent, (req, res) => {
   const { error, value } = avatarSchema.validate(req.body);
